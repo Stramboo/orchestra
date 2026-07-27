@@ -1,0 +1,7 @@
+interface:
+  display_name: "Orchestra"
+  short_description: "启用并运行节省 Codex 额度的 GPT、Codex、TRAE 开发流程"
+  default_prompt: "使用 $orchestra 为当前项目启用我的 AI 开发流程并准备下一步交接。"
+
+policy:
+  allow_implicit_invocation: false
