@@ -70,6 +70,8 @@
 - 先确认工作树与已有用户改动，再开始写入。
 - 匹配现有代码风格，不顺手重构无关代码。
 - 运行本文件列出的相关真实命令。
+- 完成一个可验证任务后创建原子 commit；不要求每次保存都 commit。
+- 交接给 Review Agent 或 Codex 前提交全部任务改动，确认工作树干净，并记录 base commit、head commit 与检查结果。
 - 使用对应任务模板提交精简实现报告。
 - 发现范围扩大、计划冲突或破坏性风险时停止并升级。
 
@@ -79,7 +81,8 @@
 - 根据验收标准、相关 diff、代码和实际检查结果审查。
 - 审查状态只能是 `APPROVED`、`CHANGES_REQUESTED` 或 `REJECTED`。
 - Blocking Findings 和 Residual Risk 没有内容时写 `None`。
-- 不以重写实现代替独立审查；需要修改时退回 Coding Agent。
+- 只审查明确的 `base...head` commit range，不修改代码或创建 commit。
+- 不以重写实现代替独立审查；需要修改时退回原 Coding Agent，由其提交修正 commit。
 
 ## 9. Git, GitHub, merge, and deployment
 
@@ -87,6 +90,7 @@
 - 同一 worktree 只允许一个活跃写入者；顺序 Agent 交接前记录 Git 状态。
 - 并行写入使用不同 worktree。
 - 保留并隔离与任务无关的未提交改动。
+- 交接工作树不干净或 base/head commit 不明确时标记 `NOT_READY`，不得把整理未提交改动转交给 Codex。
 - Codex 可提交、推送任务分支并创建或更新 PR。
 - 项目所有者批准合并和部署。
 - 强制推送、历史重写、远程删除和生产变更需要单独明确授权。

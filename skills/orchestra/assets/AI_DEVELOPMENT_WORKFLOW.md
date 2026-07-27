@@ -1,6 +1,6 @@
 # AI Development Workflow
 
-- Workflow version: 1.0.0
+- Workflow version: 1.0.1
 - Status: Active
 - Authority: Project owner
 
@@ -85,6 +85,10 @@ Review Agent 必须基于验收标准、相关 diff、检查结果和必要代�
 - 每个任务使用独立分支；Codex 创建的分支默认使用 `codex/` 前缀。
 - 开始前记录当前分支、工作树状态和已有未提交改动。
 - 不覆盖、清理或夹带与任务无关的用户改动。
+- 不要求每次保存都 commit；Coding Agent 交接给 Review Agent 或 Codex 前，必须提交全部任务改动并确认工作树干净。
+- Quick 和 Standard 通常每个可验证任务使用一个原子 commit；Major 按可独立验证的技术步骤提交，审查修正使用后续 commit。
+- 交接必须记录 base commit、head commit 和实际检查结果。条件未满足时标记 `NOT_READY`，Codex 不代替整理未提交改动。
+- Review Agent 只审查 commit range，不修改代码或创建 commit；需要修改时退回原 Coding Agent。
 - Codex 可在任务范围内提交、推送任务分支，并创建或更新 GitHub Pull Request。
 - 合并和部署始终需要项目所有者批准。
 - 强制推送、重写历史、删除远程分支或其他难恢复操作需要单独明确授权。

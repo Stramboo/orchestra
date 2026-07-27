@@ -1,6 +1,6 @@
 # AI 多 Agent 开发流程参考
 
-- Workflow version: 1.0.0
+- Workflow version: 1.0.1
 - 最终授权：项目所有者
 - 用途：供 `$orchestra` 处理分级、权限、异常和验收
 
@@ -168,9 +168,11 @@ Standard 执行流：
 → 现有 Codex 里程碑计划
 → TRAE 紧凑任务卡
 → 编码 Agent
+→ 自动检查
+→ 原子 commit 与干净工作树
 → 独立审查 Agent
 → 原编码 Agent 修复问题
-→ 自动检查
+→ 修正检查与修正 commit
 → 触发时交给 Codex
 → Codex push 任务分支并创建 PR
 → 项目所有者决定是否合并
@@ -179,18 +181,24 @@ Standard 执行流：
 同一 worktree 同一时间只能有一个源码写入 Agent。允许不同 Agent 串行接力，但必须：
 
 1. 前一个 Agent 停止编辑；
-2. 固定 commit 或记录完整 diff；
-3. 记录检查和 Git 状态；
-4. 新 Agent 从仓库证据重新建立理解。
+2. Coding Agent 将全部任务改动固定为一个或少量可审核 commit；
+3. 工作树保持干净，并记录 base commit、head commit 与检查结果；
+4. Review Agent 不修改代码或创建 commit，需要修改时退回原 Coding Agent；
+5. 新 Agent 从仓库证据重新建立理解。
+
+不要求每次保存或局部编辑都 commit。Quick 和 Standard 通常在完成一个可验证任务后提交一次；Major 按可独立验证的技术步骤提交。审查修正使用后续 commit，避免 Codex 重新区分旧改动、任务改动和未暂存内容。
+
+如果任务改动尚未全部提交、工作树不干净或 base/head commit 不明确，交接状态为 `NOT_READY`。Codex 可以诊断阻塞，但正常审核与 push 流程不得代替 Coding Agent 整理或提交这些改动。
 
 ## 6. Git、GitHub 和 worktree
 
 - Quick 任务可以使用干净的当前分支。
 - Standard 和 Major 任务使用独立分支或 worktree。
 - worktree 属于代码状态，不永久属于某个 Agent。
-- TRAE 可以创建本地任务提交，默认不得 push。
+- TRAE Coding Agent 在交接前创建本地任务 commit，默认不得 push。
+- TRAE Review Agent 只审查 commit range，不修改代码或创建 commit。
 - Codex 可以 push 任务分支并创建或更新 PR。
-- push 前检查分支、commit、验证结果、远程目标和敏感信息。
+- Codex 以 `base...head` commit range 定向审核；push 前检查分支、commit、干净工作树、验证结果、远程目标和敏感信息。
 - 项目所有者批准主分支合并和生产部署。
 - 强制 push、远程历史改写和远程分支删除需要单独授权。
 - 不清理、重置或覆盖无关用户改动。

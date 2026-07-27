@@ -71,7 +71,7 @@ description: 为已有或新项目启用并运行个人 AI 多 Agent 开发流�
 
 ### CREATE_HANDOFF
 
-选择与任务等级和下一角色匹配的模板。只加入目标、边界、验收、真实命令、必要文件、风险和 Git 状态。外部 GPT 或 TRAE 未在当前环境实际运行时标记 `NOT_EXECUTED`。
+选择与任务等级和下一角色匹配的模板。只加入目标、边界、验收、真实命令、必要文件、风险和 Git 状态。Coding Agent 交接给 Review Agent 或 Codex 前，要求其提交全部任务改动、确认工作树干净，并记录 base commit、head commit 和检查结果；不要求每次保存都 commit。条件未满足时标记 `NOT_READY`，不得让 Codex 代替整理未提交改动。外部 GPT 或 TRAE 未在当前环境实际运行时标记 `NOT_EXECUTED`。
 
 ### PLAN_UPGRADE
 
