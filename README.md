@@ -22,6 +22,8 @@ Tasks are classified as:
 
 The workflow also covers later upgrades, Git/GitHub permissions, sequential Agent handoffs in one worktree, rollback planning, and compact reporting.
 
+Agent handoffs use commits as review boundaries: saving does not require a commit, but a Coding Agent must commit all task changes, leave a clean worktree, and report the base/head commits before handing work to a Review Agent or Codex. Review Agents do not edit or commit code.
+
 ## Install / 安装
 
 Clone the repository:
