@@ -24,6 +24,35 @@ The workflow also covers later upgrades, Git/GitHub permissions, sequential Agen
 
 Agent handoffs use commits as review boundaries: saving does not require a commit, but a Coding Agent must commit all task changes, leave a clean worktree, and report the base/head commits before handing work to a Review Agent or Codex. Review Agents do not edit or commit code.
 
+## Planned 1.0.2 orchestration / 规划中的 1.0.2 自动编排
+
+The approved 1.0.2 design makes Codex a persistent controller after explicit activation. The implementation is not released yet.
+
+```mermaid
+flowchart TD
+    A["Owner starts $orchestra"] --> B["Codex inspects repository and project rules"]
+    B --> C["Codex presents compact task confirmation"]
+    C -->|Approve| D["Generate task state and Agent instructions"]
+    C -->|Modify| B
+    D --> E["TRAE Coding Agent"]
+    E --> F["Checks, commit, and standardized result"]
+    F --> G["Owner enters: 继续 Orchestra"]
+    G --> H["Codex validates state and evidence"]
+    H -->|Valid| I["Activate Review and specialist instructions"]
+    H -->|Missing evidence| J["Return NOT_READY"]
+    H -->|Scope or risk changed| C
+    J --> E
+    I --> K["TRAE Review and read-only specialist Agents"]
+    K --> L["Owner enters: 继续 Orchestra"]
+    L --> M["Codex resolves review outcome"]
+    M -->|Changes requested| N["Generate coding-fix-N instruction"]
+    N --> E
+    M -->|Accepted| O["Push branch and create or update PR"]
+    O --> P["Owner approves merge and deployment separately"]
+```
+
+Full design: [`docs/superpowers/specs/2026-07-29-orchestra-1.0.2-automation-design.md`](docs/superpowers/specs/2026-07-29-orchestra-1.0.2-automation-design.md)
+
 ## Install / 安装
 
 Clone the repository:
