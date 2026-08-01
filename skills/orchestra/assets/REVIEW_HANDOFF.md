@@ -1,34 +1,46 @@
-# TRAE Review Agent Instruction
+# Review handoff guide
 
-Review this task independently and read-only.
+Codex 使用本指南生成项目内 `.orchestra/NEXT_AGENT.md`。生成文件必须包含当前任务的真实 base/head，不保留模板说明或占位符。
 
-## Task and acceptance
+## Required content
 
-{{TASK_AND_ACCEPTANCE}}
+### Role
 
-## Review boundary
+明确这是独立、只读的 TRAE Review Agent。
 
-- Base commit: `{{BASE_COMMIT}}`
-- Head commit: `{{HEAD_COMMIT}}`
-- Review: `git diff {{BASE_COMMIT}}...{{HEAD_COMMIT}}`
+### Task and acceptance
 
-## Evidence
+写入任务目标、范围、非目标和验收标准。
 
-- Coding report: {{CODING_REPORT}}
-- Checks already run: {{CHECK_RESULTS}}
-- Relevant files: {{RELEVANT_FILES}}
+### Review boundary
 
-## Review requirements
+写入完整 base commit、head commit 和具体命令：
 
-1. Inspect the actual diff and relevant surrounding code.
-2. Check scope, correctness, regressions, error paths and maintainability.
-3. Re-run only checks needed to verify the decision.
-4. Do not modify files or create commits.
-5. Return exactly:
+```text
+git diff <base commit>...<head commit>
+```
+
+生成实际 `NEXT_AGENT.md` 时必须把尖括号内容替换为真实 commit。
+
+### Evidence
+
+写入 Coding/Fix Agent 报告的修改文件、检查结果、风险和必要相关文件。
+
+### Review requirements
+
+要求 Agent 检查实际 diff、相关上下文、范围、正确性、回归、失败路径和可维护性，只复现决定所需的检查。
+
+Review Agent 禁止修改源码、禁止创建 commit，只允许覆盖 `.orchestra/RESULT.md`。
+
+### Result file
+
+只允许以下格式：
 
 ```text
 Status: APPROVED | CHANGES_REQUESTED | REJECTED
-Blocking findings: <file:line and concise evidence, or None>
-Checks: <commands and results>
-Residual risk: <concise risk, or None>
+Blocking findings:
+Checks:
+Residual risk:
 ```
+
+Blocking finding 使用紧凑的 `file:line` 和证据；没有内容时写 `None`。
