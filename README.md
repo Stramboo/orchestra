@@ -1,90 +1,73 @@
 # Orchestra
 
-Orchestra is an explicit, low-token development workflow for coordinating a project owner, GPT, Codex, and independent TRAE coding and review agents.
+Orchestra 是一个轻量 Codex Skill：确认任务后，自动生成下一位 TRAE Coding 或 Review Agent 的完整指令，并用 Git commit 完成交接。
 
-Orchestra 是一套显式调用、节省 Codex 额度的个人多 Agent 开发流程，用于协调项目所有者、GPT、Codex、TRAE Coding Agent 和独立的 TRAE Review Agent。
+它不是任务管理平台，不运行 Agent，也不建立状态机、数据库、结果 ingest 或防恶意 Agent 系统。
 
-## Core workflow / 核心流程
+## Workflow
 
-| Role | Responsibility |
-|---|---|
-| Project owner | Product direction, scope, merge, and deployment decisions |
-| GPT | Product outline, ideas, options, and Product Brief |
-| Codex | Major technical planning and targeted milestone or exception review |
-| TRAE Coding Agent | Implementation and required checks |
-| TRAE Review Agent | Independent review against acceptance criteria |
+```mermaid
+flowchart LR
+    A["你确认任务"] --> B["Codex 生成 Coding 指令"]
+    B --> C["TRAE Coding：实现、检查、commit"]
+    C --> D["Codex 生成 Review 指令"]
+    D --> E["TRAE Review：只读审查 base...head"]
+    E -->|"需要修改"| B
+    E -->|"通过"| F["Codex 极简验收并按授权创建 Draft PR"]
+    F --> G["你决定合并和部署"]
+```
 
-Tasks are classified as:
+- Quick：默认省略独立 Review。
+- Standard：Coding → commit → independent Review。
+- Major：Codex Technical Plan → owner approval → Coding → Review → Codex acceptance。
 
-- **Quick** — low-risk local changes; skip Codex and use a five-line report.
-- **Standard** — reuse an approved plan; TRAE implements and independently reviews.
-- **Major** — Codex prepares the technical plan and performs targeted acceptance when triggered.
-
-The workflow also covers later upgrades, Git/GitHub permissions, sequential Agent handoffs in one worktree, rollback planning, and compact reporting.
-
-Agent handoffs use commits as review boundaries: saving does not require a commit, but a Coding Agent must commit all task changes, leave a clean worktree, and report the base/head commits before handing work to a Review Agent or Codex. Review Agents do not edit or commit code.
-
-## Install / 安装
-
-Clone the repository:
+## Install
 
 ```bash
 git clone https://github.com/Stramboo/orchestra.git
-```
-
-Copy `skills/orchestra` into your global Codex skills directory:
-
-```bash
 cp -R orchestra/skills/orchestra ~/.codex/skills/orchestra
 ```
 
-Windows PowerShell:
+Windows PowerShell：
 
 ```powershell
 Copy-Item -Recurse .\orchestra\skills\orchestra "$HOME\.codex\skills\orchestra"
 ```
 
-Restart Codex or open a new task so the Skill list reloads.
+重启 Codex 或打开新任务，让 Skill 列表重新加载。
 
-## Use / 使用
-
-Orchestra does not trigger implicitly. Invoke it explicitly:
+## Use
 
 ```text
-Use $orchestra to enable my AI development workflow for this existing project.
+使用 $orchestra 开始这个任务，并自动生成下一位 TRAE Agent 的指令。
 ```
 
-```text
-使用 $orchestra 为当前项目启用我的 AI 开发流程。
-```
+之后无需再次询问“下一步该给谁什么指令”：
 
-Other examples:
+- 任务明确后，Codex 自动给出 Coding 指令。
+- Coding 提供 commit 后，Codex 自动给出 Review 指令。
+- Review 要求修改时，Codex 自动给出修正指令。
+- Review 通过后，Codex只给极简结论，并按已有授权 push/Draft PR。
 
-```text
-使用 $orchestra 判断这个任务属于 Quick、Standard 还是 Major。
-使用 $orchestra 为下一位 TRAE Coding Agent 创建交接材料。
-使用 $orchestra 准备最小 Codex 验收上下文。
-```
+## Core rules
 
-## Repository layout / 仓库结构
+- 同一 worktree 同时只有一个写入 Agent。
+- Coding 正式交接前必须 commit；不要求每次保存都 commit。
+- Review 独立、只读，只审查明确的 `base...head`。
+- Codex 额度优先用于 Major、异常、冲突和里程碑。
+- 合并和部署始终由项目所有者决定。
+
+## Repository
 
 ```text
 skills/orchestra/
 ├── SKILL.md
 ├── agents/openai.yaml
-├── references/
-└── assets/
+├── assets/
+│   ├── AI_DEVELOPMENT_WORKFLOW.md
+│   ├── CODING_HANDOFF.md
+│   └── REVIEW_HANDOFF.md
+└── references/workflow.md
 ```
 
-The reusable project rules and task templates are stored under `assets/`. Detailed routing and adoption guidance is loaded from `references/` only when needed.
-
-## Safety / 安全边界
-
-- The project owner retains merge and deployment authority.
-- Force pushes, history rewrites, remote deletion, and destructive operations require explicit approval.
-- Secrets, personal contact information, and payment data must not be included in prompts, reports, source files, or commits.
-- Existing uncommitted work must be preserved and unrelated changes must not be staged.
-
-## License
-
-[MIT](LICENSE)
+License: [MIT](LICENSE)
