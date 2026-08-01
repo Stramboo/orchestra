@@ -1,40 +1,49 @@
-# TRAE Coding Agent Instruction
+# Coding / Fix handoff guide
 
-## Task
+Codex 使用本指南生成项目内 `.orchestra/NEXT_AGENT.md`。生成文件必须填写当前任务的具体值，不保留模板说明或占位符。
 
-{{TASK_GOAL}}
+## Required content
 
-## Scope
+### Role
 
-- Allowed: {{ALLOWED_SCOPE}}
-- Do not change: {{NON_GOALS}}
+明确这是 TRAE Coding Agent 或 Fix Agent。要求只完成当前任务，不扩大范围。
 
-## Acceptance
+### Goal and scope
 
-{{ACCEPTANCE_CRITERIA}}
+写入已确认的目标、允许修改范围、禁止修改范围和非目标。
 
-## Repository context
+### Acceptance
 
-- Relevant files: {{RELEVANT_FILES}}
-- Follow existing `AGENTS.md` and repository conventions.
-- Preserve unrelated user changes.
+写入可以实际验证的完成标准。
 
-## Checks
+### Repository context
 
-Run only verified project commands:
+列出必要相关文件、适用的 `AGENTS.md` 或项目规则，并要求保留无关用户改动。
 
-{{CHECK_COMMANDS}}
+### Checks
 
-## Git handoff
+只写从仓库脚本、CI、规则或维护文档核实的命令。没有核实的命令写 `NOT_VERIFIED`，不要猜测。
 
-When the task is complete:
+### Git handoff
 
-1. Commit all task changes in one or a small number of focused commits.
-2. Leave the worktree clean, or clearly identify isolated unrelated changes.
-3. Report:
-   - base commit;
-   - head commit;
-   - files changed;
-   - checks and exact results;
-   - remaining risk or `None`.
-4. Do not push, merge, deploy, or expand scope unless explicitly authorized.
+要求 Agent：
+
+1. 在正式交接前提交全部任务代码；不要求每次保存都 commit。
+2. 报告 base commit、head commit、修改文件和准确检查结果。
+3. 不 push、merge、deploy 或扩大范围，除非另有授权。
+4. 不提交 `.orchestra/`。
+
+### Result file
+
+要求 Agent 完成后覆盖 `.orchestra/RESULT.md`，只使用：
+
+```text
+Status: COMPLETED | BLOCKED
+Base:
+Head:
+Changed:
+Checks:
+Risk:
+```
+
+内容保持简短。`BLOCKED` 时只写阻塞事实和需要的决定。
