@@ -1,32 +1,41 @@
 # Orchestra
 
-Orchestra is an explicit, low-token development workflow for coordinating a project owner, GPT, Codex, and independent TRAE coding and review agents.
+Orchestra 是一个轻量 Codex Skill：用户确认任务后，Codex 在当前项目写入三个本地 Markdown 文件，让 TRAE Coding 和 Review Agent 顺序接力。
 
-Orchestra 是一套显式调用、节省 Codex 额度的个人多 Agent 开发流程，用于协调项目所有者、GPT、Codex、TRAE Coding Agent 和独立的 TRAE Review Agent。
+Orchestra 不直接运行 TRAE Agent，也不是状态机、任务平台或 Agent 安全系统。
 
-## Core workflow / 核心流程
+## Workflow
 
-| Role | Responsibility |
-|---|---|
-| Project owner | Product direction, scope, merge, and deployment decisions |
-| GPT | Product outline, ideas, options, and Product Brief |
-| Codex | Major technical planning and targeted milestone or exception review |
-| TRAE Coding Agent | Implementation and required checks |
-| TRAE Review Agent | Independent review against acceptance criteria |
+```mermaid
+flowchart LR
+    A["你确认任务"] --> B["Codex 写入 .orchestra 三个文件"]
+    B --> C["让下一位 Agent 执行 NEXT_AGENT.md"]
+    C --> D["Agent 提交代码并填写 RESULT.md"]
+    D --> E["你再次调用 Orchestra"]
+    E --> F["Codex 生成 Review 或 Fix 指令"]
+    F --> C
+    E -->|"Review 通过"| G["Codex 验收并按授权更新 Draft PR"]
+    G --> H["你决定合并和部署"]
+```
 
-Tasks are classified as:
+项目内只使用：
 
-- **Quick** — low-risk local changes; skip Codex and use a five-line report.
-- **Standard** — reuse an approved plan; TRAE implements and independently reviews.
-- **Major** — Codex prepares the technical plan and performs targeted acceptance when triggered.
+```text
+.orchestra/
+├── TASK.md
+├── NEXT_AGENT.md
+└── RESULT.md
+```
 
-The workflow also covers later upgrades, Git/GitHub permissions, sequential Agent handoffs in one worktree, rollback planning, and compact reporting.
+- `TASK.md`：当前任务的目标、范围、验收和可读步骤。
+- `NEXT_AGENT.md`：下一位 Agent 可以直接执行的完整指令。
+- `RESULT.md`：最近一位 Agent 的简短结果；下一阶段可以覆盖。
 
-Agent handoffs use commits as review boundaries: saving does not require a commit, but a Coding Agent must commit all task changes, leave a clean worktree, and report the base/head commits before handing work to a Review Agent or Codex. Review Agents do not edit or commit code.
+三个文件是本地交接便笺，不保存任务历史。Git 项目会把 `.orchestra/` 写入本地 `.git/info/exclude`，不会修改项目 `.gitignore`，也不会进入任务 commit。
 
-## Planned 1.0.2 orchestration / 规划中的 1.0.2 自动编排
+## Historical 1.0.2 orchestration design / 历史自动编排方案
 
-The approved 1.0.2 design makes Codex a persistent controller after explicit activation. The implementation is not released yet.
+This earlier design proposed making Codex a persistent controller after explicit activation. The released 1.0.2 Skill uses the lightweight three-file workflow described above; this controller design remains a historical proposal.
 
 ```mermaid
 flowchart TD
@@ -53,67 +62,79 @@ flowchart TD
 
 Full design: [`docs/superpowers/specs/2026-07-29-orchestra-1.0.2-automation-design.md`](docs/superpowers/specs/2026-07-29-orchestra-1.0.2-automation-design.md)
 
-## Install / 安装
-
-Clone the repository:
+## Install
 
 ```bash
 git clone https://github.com/Stramboo/orchestra.git
-```
-
-Copy `skills/orchestra` into your global Codex skills directory:
-
-```bash
 cp -R orchestra/skills/orchestra ~/.codex/skills/orchestra
 ```
 
-Windows PowerShell:
+Windows PowerShell：
 
 ```powershell
 Copy-Item -Recurse .\orchestra\skills\orchestra "$HOME\.codex\skills\orchestra"
 ```
 
-Restart Codex or open a new task so the Skill list reloads.
+重启 Codex 或打开新任务，让 Skill 列表重新加载。
 
-## Use / 使用
+## Use
 
-Orchestra does not trigger implicitly. Invoke it explicitly:
-
-```text
-Use $orchestra to enable my AI development workflow for this existing project.
-```
+### 1. 确认任务
 
 ```text
-使用 $orchestra 为当前项目启用我的 AI 开发流程。
+使用 $orchestra 开始这个任务。
 ```
 
-Other examples:
+任务明确后，Codex 自动写入 `.orchestra/`。聊天中只告诉你下一位 Agent 类型和 `NEXT_AGENT.md` 路径，不再粘贴长提示词。
+
+### 2. 让 Agent 执行
+
+让 TRAE Agent 读取并执行：
 
 ```text
-使用 $orchestra 判断这个任务属于 Quick、Standard 还是 Major。
-使用 $orchestra 为下一位 TRAE Coding Agent 创建交接材料。
-使用 $orchestra 准备最小 Codex 验收上下文。
+.orchestra/NEXT_AGENT.md
 ```
 
-## Repository layout / 仓库结构
+Coding/Fix Agent 修改任务代码、运行检查、创建 commit，并填写 `RESULT.md`。Review Agent 独立只读审查，只能填写 `RESULT.md`。
+
+### 3. 继续 Orchestra
+
+Agent 完成后告诉 Codex：
+
+```text
+继续 Orchestra。
+```
+
+Codex 读取结果和最小 Git 证据，然后自动进入 Review、Fix、完成或 Draft PR 阶段。
+
+如果项目目录不可写，Orchestra 才退回在聊天中输出完整 Agent 指令。
+
+## Levels
+
+- Quick：局部低风险任务，默认可以省略独立 Review。
+- Standard：Coding → commit → independent Review。
+- Major：Codex Technical Plan → owner approval → Coding → Review → Codex acceptance。
+
+## Boundaries
+
+- 同一 worktree 同时只有一个源码写入 Agent。
+- Coding/Fix Agent 正式交接前提交任务代码；不要求每次保存都 commit。
+- Review Agent 只审查明确的 `base...head`，不修改源码或创建 commit。
+- 无关用户改动必须保留。
+- Codex 可按已有授权 push 和创建或更新 Draft PR。
+- merge、deploy、force-push、历史重写和远程删除由项目所有者决定。
+
+## Repository
 
 ```text
 skills/orchestra/
 ├── SKILL.md
 ├── agents/openai.yaml
-├── references/
-└── assets/
+├── assets/
+│   ├── AI_DEVELOPMENT_WORKFLOW.md
+│   ├── CODING_HANDOFF.md
+│   └── REVIEW_HANDOFF.md
+└── references/workflow.md
 ```
 
-The reusable project rules and task templates are stored under `assets/`. Detailed routing and adoption guidance is loaded from `references/` only when needed.
-
-## Safety / 安全边界
-
-- The project owner retains merge and deployment authority.
-- Force pushes, history rewrites, remote deletion, and destructive operations require explicit approval.
-- Secrets, personal contact information, and payment data must not be included in prompts, reports, source files, or commits.
-- Existing uncommitted work must be preserved and unrelated changes must not be staged.
-
-## License
-
-[MIT](LICENSE)
+License: [MIT](LICENSE)
