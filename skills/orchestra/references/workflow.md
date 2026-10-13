@@ -9,10 +9,11 @@
 
 ```text
 用户确认任务
-→ Codex 生成 Coding 指令
-→ TRAE Coding 实现、检查、commit
-→ Codex 生成 Review 指令（Standard/Major）
-→ TRAE Review 只读审查 base...head
+→ Codex 写入 .orchestra/TASK.md、NEXT_AGENT.md、RESULT.md
+→ TRAE Coding 读取 NEXT_AGENT.md，完成实现、检查、commit 和 RESULT.md
+→ 用户继续 Orchestra
+→ Codex 读取结果和 Git，覆盖 NEXT_AGENT.md 为 Review 指令（Standard/Major）
+→ TRAE Review 只读审查 base...head，只填写 RESULT.md
 → 修正或通过
 → Codex 极简验收、push、Draft PR
 → 用户决定合并与部署
@@ -43,6 +44,8 @@ Worktree status
 ```
 
 工作树不干净或任务改动未提交时标记 `NOT_READY`。Codex 不替 Coding Agent 猜测 review range。Review Agent 只读，不提交修复；问题退回原 Coding Agent 创建新 commit。
+
+`.orchestra/` 只保存当前任务，必须加入本地 `.git/info/exclude`，不得进入任务 commit。`Current step` 只是 `CODING`、`REVIEW`、`FIX`、`DONE` 的可读标记，不验证状态转换，不保存历史。
 
 ## 异常
 
