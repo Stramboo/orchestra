@@ -33,6 +33,35 @@ flowchart LR
 
 三个文件是本地交接便笺，不保存任务历史。Git 项目会把 `.orchestra/` 写入本地 `.git/info/exclude`，不会修改项目 `.gitignore`，也不会进入任务 commit。
 
+## Historical 1.0.2 orchestration design / 历史自动编排方案
+
+This earlier design proposed making Codex a persistent controller after explicit activation. The released 1.0.2 Skill uses the lightweight three-file workflow described above; this controller design remains a historical proposal.
+
+```mermaid
+flowchart TD
+    A["Owner starts $orchestra"] --> B["Codex inspects repository and project rules"]
+    B --> C["Codex presents compact task confirmation"]
+    C -->|Approve| D["Generate task state and Agent instructions"]
+    C -->|Modify| B
+    D --> E["TRAE Coding Agent"]
+    E --> F["Checks, commit, and standardized result"]
+    F --> G["Owner enters: 继续 Orchestra"]
+    G --> H["Codex validates state and evidence"]
+    H -->|Valid| I["Activate Review and specialist instructions"]
+    H -->|Missing evidence| J["Return NOT_READY"]
+    H -->|Scope or risk changed| C
+    J --> E
+    I --> K["TRAE Review and read-only specialist Agents"]
+    K --> L["Owner enters: 继续 Orchestra"]
+    L --> M["Codex resolves review outcome"]
+    M -->|Changes requested| N["Generate coding-fix-N instruction"]
+    N --> E
+    M -->|Accepted| O["Push branch and create or update PR"]
+    O --> P["Owner approves merge and deployment separately"]
+```
+
+Full design: [`docs/superpowers/specs/2026-07-29-orchestra-1.0.2-automation-design.md`](docs/superpowers/specs/2026-07-29-orchestra-1.0.2-automation-design.md)
+
 ## Install
 
 ```bash
